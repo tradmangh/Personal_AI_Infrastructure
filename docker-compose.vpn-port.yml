@@ -1,0 +1,7 @@
+services:
+  pai:
+    # Binds directly to the WireGuard VPN interface IP
+    # Provide VPN_IP in your environment variables (default: 10.8.0.1)
+    ports:
+      - "${VPN_IP:-10.8.0.1}:8080:8080" # PAI Web Terminal
+      - "${VPN_IP:-10.8.0.1}:8888:8888" # PAI Voice Server (Optional)

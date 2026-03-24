@@ -1,0 +1,37 @@
+services:
+  pai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pai
+    # BIND_IP: Set to 0.0.0.0 for public, 10.8.0.1 for VPN, or 127.0.0.1 to hide ports.
+    ports:
+      - "${BIND_IP:-0.0.0.0}:${BIND_PORT:-8080}:8080"
+      - "${BIND_IP:-0.0.0.0}:${VOICE_PORT:-8888}:8888"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - PRINCIPAL_NAME=${PRINCIPAL_NAME:-User}
+      - TIMEZONE=${TIMEZONE:-UTC}
+      - AI_NAME=${AI_NAME:-PAI}
+      - CATCHPHRASE=${CATCHPHRASE:-Ready to go}
+      - TEMPERATURE_UNIT=${TEMPERATURE_UNIT:-fahrenheit}
+      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID:-pNInz6obpgDQGcFmaJgB}
+    volumes:
+      - pai-memory:/home/pai/.claude/MEMORY
+      - pai-user:/home/pai/.claude/USER
+      - pai-config:/home/pai/.config/PAI
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=${TRAEFIK_ENABLE:-false}"
+      - "traefik.http.routers.pai.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.services.pai.loadbalancer.server.port=8080"
+      # Security: Always apply the IP filter. 
+      # If VPN_SUBNET is not provided, it defaults to '0.0.0.0/0' (Allow All).
+      - "traefik.http.middlewares.pai-filter.ipallowlist.sourcerange=${VPN_SUBNET:-0.0.0.0/0}"
+      - "traefik.http.routers.pai.middlewares=pai-filter"
+
+volumes:
+  pai-memory:
+  pai-user:
+  pai-config:
