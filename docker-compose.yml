@@ -4,10 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: pai
-    # BIND_IP: Set to 0.0.0.0 for public, 10.8.0.1 for VPN, or 127.0.0.1 to hide ports.
+    # BIND_IP: Default is 127.0.0.1 (Loopback) for security. 
+    # Set to 0.0.0.0 to expose publicly, or 10.8.0.1 for a specific VPN interface.
     ports:
-      - "${BIND_IP:-0.0.0.0}:${BIND_PORT:-8080}:8080"
-      - "${BIND_IP:-0.0.0.0}:${VOICE_PORT:-8888}:8888"
+      - "${BIND_IP:-127.0.0.1}:${BIND_PORT:-8080}:8080"
+      - "${BIND_IP:-127.0.0.1}:${VOICE_PORT:-8888}:8888"
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
@@ -27,8 +28,9 @@ services:
       - "traefik.http.routers.pai.rule=Host(`${DOMAIN:-localhost}`)"
       - "traefik.http.services.pai.loadbalancer.server.port=8080"
       # Security: Always apply the IP filter. 
-      # If VPN_SUBNET is not provided, it defaults to '0.0.0.0/0' (Allow All).
-      - "traefik.http.middlewares.pai-filter.ipallowlist.sourcerange=${VPN_SUBNET:-0.0.0.0/0}"
+      # Default: 127.0.0.1/32 (Blocked). 
+      # Set VPN_SUBNET to your WireGuard range or 0.0.0.0/0 for public.
+      - "traefik.http.middlewares.pai-filter.ipallowlist.sourcerange=${VPN_SUBNET:-127.0.0.1/32}"
       - "traefik.http.routers.pai.middlewares=pai-filter"
 
 volumes:

@@ -20,14 +20,14 @@ Choose your desired security level by setting these variables in the Coolify das
 
 ### Scenario A: Public (Domain + SSL)
 Access via a custom domain. Ports are hidden from the public IP.
-- `BIND_IP`: `127.0.0.1`
+- `BIND_IP`: `127.0.0.1` (Default)
 - `TRAEFIK_ENABLE`: `true`
 - `DOMAIN`: `pai.yourdomain.com`
-- `VPN_SUBNET`: `0.0.0.0/0` (Allow All)
+- `VPN_SUBNET`: `0.0.0.0/0` (Explicitly Allow All)
 
 ### Scenario B: VPN Restricted (Domain + SSL) - **Recommended**
 Access via a custom domain, but Traefik blocks anyone not on your VPN.
-- `BIND_IP`: `127.0.0.1`
+- `BIND_IP`: `127.0.0.1` (Default)
 - `TRAEFIK_ENABLE`: `true`
 - `DOMAIN`: `pai.yourdomain.com`
 - `VPN_SUBNET`: `10.8.0.0/24` (Your WireGuard subnet)
@@ -38,14 +38,22 @@ No domain or SSL. Only accessible via the server's internal VPN IP.
 - `TRAEFIK_ENABLE`: `false`
 - Access via: `http://10.8.0.1:8080`
 
+### Scenario D: Standard Public (Exposed Ports)
+If you want to access via IP and port directly over the public internet.
+- `BIND_IP`: `0.0.0.0`
+- `TRAEFIK_ENABLE`: `false`
+- Access via: `http://<public-ip>:8080`
+
 ## Core Environment Variables
-| Variable | Description |
-|----------|-------------|
-| `ANTHROPIC_API_KEY` | Your Claude API key (Required) |
-| `ELEVENLABS_API_KEY` | Your ElevenLabs API key (Optional) |
-| `PRINCIPAL_NAME` | Your name |
-| `AI_NAME` | Assistant's name (e.g., Jarvis) |
-| `TIMEZONE` | e.g., `Europe/Berlin` |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `BIND_IP` | Interface IP to bind to | `127.0.0.1` |
+| `VPN_SUBNET` | IP Allowlist for Traefik | `127.0.0.1/32` |
+| `ANTHROPIC_API_KEY` | Your Claude API key | (None) |
+| `ELEVENLABS_API_KEY` | Your ElevenLabs API key | (None) |
+| `PRINCIPAL_NAME` | Your name | `User` |
+| `AI_NAME` | Assistant's name | `PAI` |
+| `TIMEZONE` | e.g., `Europe/Berlin` | `UTC` |
 
 ## Persistence
 The following directories are persisted:
