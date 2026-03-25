@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM node:20-bookworm-slim AS builder
+FROM node:20-slim AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,11 +12,13 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://bun.sh/install | bash
 
 # --- Final Stage ---
-FROM node:20-bookworm-slim
+FROM ubuntu:22.04
 
-# Install runtime dependencies
-# We use a cleaner run command to avoid metadata overhead issues in some CI environments
-RUN apt-get update && \
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install runtime dependencies with retries and no-recommends
+RUN apt-get update -o Acquire::Retries=3 && \
     apt-get install -y --no-install-recommends \
     curl \
     git \
@@ -27,6 +29,10 @@ RUN apt-get update && \
     python3 \
     mpg123 \
     ttyd && \
+    # Install Node.js 20 from Nodesource
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    # Cleanup
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -45,14 +51,14 @@ USER pai
 WORKDIR /home/pai
 
 # Install Claude Code globally
-RUN npm install -g @anthropic-ai/claude-code
+RUN sudo npm install -g @anthropic-ai/claude-code
 
 # Copy PAI release files to /usr/local/pai
 COPY --chown=pai:pai Releases/v4.0.3/.claude /usr/local/pai
 
 # Copy the startup script
 COPY --chown=pai:pai Docker/startup.sh /home/pai/startup.sh
-RUN chmod +x /home/pai/startup.sh
+RUN sudo chmod +x /home/pai/startup.sh
 
 # Expose ports
 EXPOSE 8080 8888
