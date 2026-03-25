@@ -13,6 +13,7 @@ This document tracks all platform-specific code and dependencies across PAI, pro
 |----------|--------|-------|
 | **macOS** | ✅ Fully Supported | Primary development platform |
 | **Linux** | ✅ Fully Supported | Ubuntu/Debian tested, other distros via community |
+| **Docker**| ✅ Fully Supported | Universal deployment via Docker Compose / Coolify |
 | **Windows** | ❌ Not Supported | Community contributions welcome |
 
 ---
@@ -200,7 +201,7 @@ Contributors fixing platform issues should:
 
 **Low Priority:**
 - Support for alternative package managers
-- Docker/container deployment guide
+- ✅ Docker/container deployment guide
 - Automated multi-platform testing (CI/CD)
 
 ---
