@@ -7,7 +7,7 @@ services:
     # BIND_IP: Default is 127.0.0.1 (Loopback) for security. 
     # Set to 0.0.0.0 to expose publicly, or 10.8.0.1 for a specific VPN interface.
     ports:
-      - "${BIND_IP:-127.0.0.1}:${BIND_PORT:-8082}:8080"
+      - "${BIND_IP:-127.0.0.1}:${BIND_PORT:-8082}:${BIND_PORT:-8082}"
       - "${BIND_IP:-127.0.0.1}:${VOICE_PORT:-8888}:8888"
     environment:
       # --- App Configuration ---
@@ -35,7 +35,8 @@ services:
     labels:
       - "traefik.enable=${TRAEFIK_ENABLE:-false}"
       - "traefik.http.routers.pai.rule=Host(`${FQDN:-localhost}`)"
-      - "traefik.http.services.pai.loadbalancer.server.port=8080"
+      # Crucial: Use the same port here as the terminal starts on
+      - "traefik.http.services.pai.loadbalancer.server.port=${BIND_PORT:-8082}"
       # Security: Always apply the IP filter. 
       # Default: 127.0.0.1/32 (Blocked). 
       # Set VPN_SUBNET to your WireGuard range or 0.0.0.0/0 for public.
