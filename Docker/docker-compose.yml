@@ -11,22 +11,22 @@ services:
       - "${BIND_IP:-127.0.0.1}:${VOICE_PORT:-8888}:8888"
     environment:
       # --- App Configuration ---
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
-      - PRINCIPAL_NAME=${PRINCIPAL_NAME:-User}
-      - TIMEZONE=${TIMEZONE:-UTC}
-      - AI_NAME=${AI_NAME:-PAI}
-      - CATCHPHRASE=${CATCHPHRASE:-Ready to go}
-      - TEMPERATURE_UNIT=${TEMPERATURE_UNIT:-fahrenheit}
-      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID:-pNInz6obpgDQGcFmaJgB}
+      - ANTHROPIC_API_KEY
+      - ELEVENLABS_API_KEY
+      - PRINCIPAL_NAME
+      - TIMEZONE
+      - AI_NAME
+      - CATCHPHRASE
+      - TEMPERATURE_UNIT
+      - ELEVENLABS_VOICE_ID
 
-      # --- Network Hints (Forces visibility in Coolify UI) ---
-      - BIND_IP=${BIND_IP:-127.0.0.1}
-      - BIND_PORT=${BIND_PORT:-8080}
-      - VOICE_PORT=${VOICE_PORT:-8888}
-      - TRAEFIK_ENABLE=${TRAEFIK_ENABLE:-false}
-      - DOMAIN=${DOMAIN:-localhost}
-      - VPN_SUBNET=${VPN_SUBNET:-127.0.0.1/32}
+      # --- Network & Security ---
+      - BIND_IP
+      - BIND_PORT
+      - VOICE_PORT
+      - TRAEFIK_ENABLE
+      - DOMAIN
+      - VPN_SUBNET
     volumes:
       - pai-memory:/home/pai/.claude/MEMORY
       - pai-user:/home/pai/.claude/USER
