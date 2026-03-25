@@ -6,7 +6,7 @@ services:
       - traefik.enable=true
       
       # 1. Define the domain (Replace pai.yourdomain.com with your domain)
-      - traefik.http.routers.pai-terminal.rule=Host(`${DOMAIN:-pai.yourdomain.com}`)
+      - traefik.http.routers.pai-terminal.rule=Host(`${FQDN:-pai.yourdomain.com}`)
       - traefik.http.services.pai-terminal.loadbalancer.server.port=8080
       
       # 2. IP Allowlist Middleware (Replace 10.8.0.0/24 with your WireGuard Subnet)

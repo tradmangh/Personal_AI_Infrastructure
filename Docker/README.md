@@ -23,14 +23,14 @@ Choose your desired security level by setting these variables in the Coolify das
 Access via a custom domain. Ports are hidden from the public IP (Default).
 - `BIND_IP`: `127.0.0.1` (Default)
 - `TRAEFIK_ENABLE`: `true`
-- `DOMAIN`: `pai.yourdomain.com`
+- `FQDN`: `pai.yourdomain.com`
 - `VPN_SUBNET`: `0.0.0.0/0` (Explicitly Allow All)
 
 ### Scenario B: VPN Restricted (Domain + SSL) - **Recommended**
 Access via a custom domain, but Traefik blocks anyone not on your VPN.
 - `BIND_IP`: `127.0.0.1` (Default)
 - `TRAEFIK_ENABLE`: `true`
-- `DOMAIN`: `pai.yourdomain.com`
+- `FQDN`: `pai.yourdomain.com`
 - `VPN_SUBNET`: `10.8.0.0/24` (Your WireGuard subnet)
 
 ### Scenario C: VPN Only (Direct IP)
@@ -50,6 +50,7 @@ If you want to access via IP and port directly over the public internet. This ex
 |----------|-------------|---------|
 | `BIND_IP` | Interface IP to bind to | `127.0.0.1` |
 | `VPN_SUBNET` | IP Allowlist for Traefik | `127.0.0.1/32` |
+| `FQDN` | FQDN for Traefik | `localhost` |
 | `ANTHROPIC_API_KEY` | Your Claude API key | (None) |
 | `ELEVENLABS_API_KEY` | Your ElevenLabs API key | (None) |
 | `PRINCIPAL_NAME` | Your name | `User` |

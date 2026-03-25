@@ -25,7 +25,7 @@ services:
       - BIND_PORT
       - VOICE_PORT
       - TRAEFIK_ENABLE
-      - DOMAIN
+      - FQDN
       - VPN_SUBNET
     volumes:
       - pai-memory:/home/pai/.claude/MEMORY
@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=${TRAEFIK_ENABLE:-false}"
-      - "traefik.http.routers.pai.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.pai.rule=Host(`${FQDN:-localhost}`)"
       - "traefik.http.services.pai.loadbalancer.server.port=8080"
       # Security: Always apply the IP filter. 
       # Default: 127.0.0.1/32 (Blocked). 
