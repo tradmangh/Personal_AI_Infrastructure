@@ -45,10 +45,11 @@ WORKDIR /home/pai
 RUN npm install -g @anthropic-ai/claude-code
 
 # Copy PAI release files to /usr/local/pai
+# Note: Context should be root of the repo
 COPY --chown=pai:pai Releases/v4.0.3/.claude /usr/local/pai
 
 # Copy the startup script
-COPY --chown=pai:pai startup.sh /home/pai/startup.sh
+COPY --chown=pai:pai Docker/startup.sh /home/pai/startup.sh
 RUN chmod +x /home/pai/startup.sh
 
 # Expose ports

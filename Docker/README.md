@@ -12,14 +12,15 @@ This setup allows you to deploy Personal AI Infrastructure (PAI) on any server r
 
 1. **New Application**: Select "Public Repository" or "Docker Compose".
 2. **Repository**: Use your fork of this repository.
-3. **Environment Variables**: Add your API keys and identity preferences.
+3. **Docker Compose Path**: Set this to `Docker/docker-compose.yml`.
+4. **Environment Variables**: Coolify will auto-detect the variables. Fill in your API keys and identity preferences.
 
 ## 🔒 Deployment Modes (Switch via Environment Variables)
 
 Choose your desired security level by setting these variables in the Coolify dashboard.
 
 ### Scenario A: Public (Domain + SSL)
-Access via a custom domain. Ports are hidden from the public IP.
+Access via a custom domain. Ports are hidden from the public IP (Default).
 - `BIND_IP`: `127.0.0.1` (Default)
 - `TRAEFIK_ENABLE`: `true`
 - `DOMAIN`: `pai.yourdomain.com`

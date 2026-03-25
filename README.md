@@ -347,7 +347,7 @@ cd Personal_AI_Infrastructure/Releases/v4.0.3
 cp -r .claude ~/ && cd ~/.claude && bash install.sh
 ```
 
-**Docker/Coolify:** For server-side deployment, see the **[Docker Deployment Guide →](README.docker.md)**.
+**Docker/Coolify:** For server-side deployment, see the **[Docker Deployment Guide →](Docker/README.md)**.
 
 **The installer will:**
 - Detect your system and install prerequisites (Bun, Git, Claude Code)
