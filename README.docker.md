@@ -38,8 +38,8 @@ No domain or SSL. Only accessible via the server's internal VPN IP.
 - `TRAEFIK_ENABLE`: `false`
 - Access via: `http://10.8.0.1:8080`
 
-### Scenario D: Standard Public (Exposed Ports)
-If you want to access via IP and port directly over the public internet.
+### Scenario D: Standard Public (Exposed Ports) - **NOT RECOMMENDED**
+If you want to access via IP and port directly over the public internet. This exposes your PAI instance to the open web without SSL.
 - `BIND_IP`: `0.0.0.0`
 - `TRAEFIK_ENABLE`: `false`
 - Access via: `http://<public-ip>:8080`
