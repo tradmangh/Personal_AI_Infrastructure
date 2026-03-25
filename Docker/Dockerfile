@@ -15,7 +15,9 @@ RUN curl -fsSL https://bun.sh/install | bash
 FROM node:20-bookworm-slim
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# We use a cleaner run command to avoid metadata overhead issues in some CI environments
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     curl \
     git \
     bash \
@@ -24,8 +26,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     python3 \
     mpg123 \
-    ttyd \
-    && rm -rf /var/lib/apt/lists/*
+    ttyd && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy Bun from builder
 COPY --from=builder /root/.bun /home/pai/.bun
@@ -45,7 +48,6 @@ WORKDIR /home/pai
 RUN npm install -g @anthropic-ai/claude-code
 
 # Copy PAI release files to /usr/local/pai
-# Note: Context should be root of the repo
 COPY --chown=pai:pai Releases/v4.0.3/.claude /usr/local/pai
 
 # Copy the startup script
