@@ -27,17 +27,20 @@ RUN apt-get update && \
     sudo \
     unzip \
     python3 \
-    mpg123 && \
+    mpg123 \
+    openssh-server && \
     # Download ttyd binary directly
     ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then TTYD_ARCH="x86_64"; else TTYD_ARCH="aarch64"; fi && \
     curl -L "https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.${TTYD_ARCH}" -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd && \
+    # Setup SSH directory
+    mkdir /var/run/sshd && \
     # Cleanup
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Claude Code globally (Running as ROOT to avoid permission issues)
+# Install Claude Code globally
 RUN npm install -g @anthropic-ai/claude-code
 
 # Create user 'pai'
@@ -62,7 +65,10 @@ COPY --chown=pai:pai Docker/startup.sh /home/pai/startup.sh
 RUN chmod +x /home/pai/startup.sh
 
 # Expose ports
-EXPOSE 8080 8888
+# 22: SSH
+# 8082: ttyd
+# 8888: VoiceServer
+EXPOSE 22 8082 8888
 
 # Persistence
 VOLUME [ "/home/pai/.claude/MEMORY", "/home/pai/.claude/USER", "/home/pai/.config/PAI" ]

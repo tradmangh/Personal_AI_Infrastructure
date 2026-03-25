@@ -9,6 +9,7 @@ services:
     ports:
       - "${BIND_IP:-127.0.0.1}:${BIND_PORT:-8082}:${BIND_PORT:-8082}"
       - "${BIND_IP:-127.0.0.1}:${VOICE_PORT:-8888}:8888"
+      - "${BIND_IP:-127.0.0.1}:${SSH_PORT:-2222}:22"
     environment:
       # --- App Configuration ---
       - ANTHROPIC_API_KEY
@@ -19,11 +20,13 @@ services:
       - CATCHPHRASE
       - TEMPERATURE_UNIT
       - ELEVENLABS_VOICE_ID
+      - PAI_PASSWORD
 
       # --- Network & Security ---
       - BIND_IP
       - BIND_PORT
       - VOICE_PORT
+      - SSH_PORT
       - TRAEFIK_ENABLE
       - FQDN
       - VPN_SUBNET
@@ -35,7 +38,6 @@ services:
     labels:
       - "traefik.enable=${TRAEFIK_ENABLE:-false}"
       - "traefik.http.routers.pai.rule=Host(`${FQDN:-localhost}`)"
-      # Crucial: Use the same port here as the terminal starts on
       - "traefik.http.services.pai.loadbalancer.server.port=${BIND_PORT:-8082}"
       # Security: Always apply the IP filter. 
       # Default: 127.0.0.1/32 (Blocked). 

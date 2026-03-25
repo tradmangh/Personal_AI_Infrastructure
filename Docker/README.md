@@ -4,6 +4,7 @@ This setup allows you to deploy Personal AI Infrastructure (PAI) on any server r
 
 ## Features
 - **Web-based Terminal**: Access PAI via your browser on port 8082 (powered by `ttyd`).
+- **SSH Access**: Connect directly via SSH using the `pai` user.
 - **Voice Server**: Background voice notification server on port 8888.
 - **Persistent Memory**: Your AI's memory and user files are stored in Docker volumes.
 - **Universal Configuration**: One Docker Compose for Public, VPN, or Private modes.
@@ -13,7 +14,17 @@ This setup allows you to deploy Personal AI Infrastructure (PAI) on any server r
 1. **New Application**: Select "Public Repository" or "Docker Compose".
 2. **Repository**: Use your fork of this repository.
 3. **Docker Compose Path**: Set this to `Docker/docker-compose.yml`.
-4. **Environment Variables**: Coolify will auto-detect the variables. Fill in your API keys and identity preferences.
+4. **Environment Variables**: Coolify will auto-detect the variables. Fill in your API keys, identity preferences, and **`PAI_PASSWORD`** for SSH access.
+
+## 🔑 SSH Access
+You can connect to the container via SSH:
+- **User**: `pai`
+- **Password**: (The value of `PAI_PASSWORD`)
+- **Default Port**: `2222` (Configurable via `SSH_PORT`)
+
+```bash
+ssh pai@<your-server-ip> -p 2222
+```
 
 ## 🔒 Deployment Modes (Switch via Environment Variables)
 
@@ -50,8 +61,10 @@ If you want to access via IP and port directly over the public internet. This ex
 |----------|-------------|---------|
 | `BIND_IP` | Interface IP to bind to | `127.0.0.1` |
 | `BIND_PORT` | Port for the terminal | `8082` |
+| `SSH_PORT` | Port for SSH access | `2222` |
 | `VPN_SUBNET` | IP Allowlist for Traefik | `127.0.0.1/32` |
 | `FQDN` | FQDN for Traefik | `localhost` |
+| `PAI_PASSWORD` | Password for user `pai` | (None) |
 | `ANTHROPIC_API_KEY` | Your Claude API key | (None) |
 | `ELEVENLABS_API_KEY` | Your ElevenLabs API key | (None) |
 | `PRINCIPAL_NAME` | Your name | `User` |
@@ -65,6 +78,6 @@ The following directories are persisted:
 - `/home/pai/.config/PAI`: API keys and core settings.
 
 ## Usage in Terminal
-Once you open the web terminal:
+Once you open the web terminal or SSH in:
 1. Run `pai` to launch the PAI assistant.
 2. The first time you run it, you may need to log in to Claude Code if you didn't provide an API key in the environment.

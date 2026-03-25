@@ -6,15 +6,31 @@ PAI_DIR="/home/pai/.claude"
 CONFIG_DIR="/home/pai/.config/PAI"
 APP_DIR="/usr/local/pai"
 
-# Fix permissions for persistent volumes (mounted as root by Docker)
+# Fix permissions for persistent volumes
 sudo chown -R pai:pai "$PAI_DIR" 2>/dev/null || true
 sudo chown -R pai:pai "$CONFIG_DIR" 2>/dev/null || true
+
+# --- SSH & User Setup ---
+# Set user password if provided
+if [ -n "$PAI_PASSWORD" ]; then
+    echo "pai:$PAI_PASSWORD" | sudo chpasswd
+    echo "Password updated for user 'pai'."
+else
+    echo "WARNING: PAI_PASSWORD not set. SSH password login will likely fail."
+fi
+
+# Configure SSH for password auth
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Start SSH service
+echo "Starting SSH server..."
+sudo /usr/sbin/sshd
 
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$PAI_DIR"
 
 # Symlink app files from APP_DIR to PAI_DIR
-# These are the files that should NOT be in persistent volumes
 for item in "$APP_DIR"/*; do
     base=$(basename "$item")
     if [ "$base" != "MEMORY" ] && [ "$base" != "USER" ]; then
@@ -31,7 +47,6 @@ mkdir -p "$PAI_DIR/MEMORY/VOICE"
 mkdir -p "$PAI_DIR/USER"
 
 # --- Environment Setup ---
-# Default values if not provided
 PRINCIPAL_NAME="${PRINCIPAL_NAME:-User}"
 TIMEZONE="${TIMEZONE:-UTC}"
 AI_NAME="${AI_NAME:-PAI}"
@@ -45,26 +60,21 @@ echo "ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}" > "$ENV_PATH"
 echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" >> "$ENV_PATH"
 chmod 600 "$ENV_PATH"
 
-# Symlinks for .env
 ln -sf "$ENV_PATH" "$PAI_DIR/.env"
 ln -sf "$ENV_PATH" "/home/pai/.env"
 
 # --- Patch settings.json ---
 SETTINGS_PATH="$PAI_DIR/settings.json"
-
-# Check if settings.json is already a symlink, if not, create it
 if [ ! -L "$SETTINGS_PATH" ] && [ -f "$SETTINGS_PATH" ]; then
     rm "$SETTINGS_PATH"
 fi
 
-# We'll copy settings.json from APP_DIR to CONFIG_DIR and symlink back
 SETTINGS_STORE="$CONFIG_DIR/settings.json"
 if [ ! -f "$SETTINGS_STORE" ]; then
     cp "$APP_DIR/settings.json" "$SETTINGS_STORE"
 fi
 ln -snf "$SETTINGS_STORE" "$SETTINGS_PATH"
 
-# Use python to update JSON
 python3 << EOF
 import json
 import os
@@ -73,12 +83,10 @@ path = "$SETTINGS_STORE"
 with open(path, 'r') as f:
     data = json.load(f)
 
-# Update environment
 data['env'] = data.get('env', {})
 data['env']['PAI_DIR'] = "$PAI_DIR"
 data['env']['PAI_CONFIG_DIR'] = "$CONFIG_DIR"
 
-# Update identity
 data['principal'] = data.get('principal', {})
 data['principal']['name'] = "$PRINCIPAL_NAME"
 data['principal']['timezone'] = "$TIMEZONE"
@@ -87,7 +95,6 @@ data['daidentity'] = data.get('daidentity', {})
 data['daidentity']['name'] = "$AI_NAME"
 data['daidentity']['startupCatchphrase'] = "$CATCHPHRASE"
 
-# Update voices
 voice_id = "$ELEVENLABS_VOICE_ID"
 data['daidentity']['voices'] = data['daidentity'].get('voices', {})
 data['daidentity']['voices']['main'] = data['daidentity']['voices'].get('main', {})
@@ -115,7 +122,6 @@ with open(path, 'w') as f:
 EOF
 
 # --- Patch VoiceServer for Linux ---
-# We can't patch directly in APP_DIR if it's read-only, so we'll copy VoiceServer to PAI_DIR
 if [ ! -d "$PAI_DIR/VoiceServer" ] || [ -L "$PAI_DIR/VoiceServer" ]; then
     rm -rf "$PAI_DIR/VoiceServer"
     cp -r "$APP_DIR/VoiceServer" "$PAI_DIR/VoiceServer"
@@ -137,7 +143,6 @@ cd "$PAI_DIR/VoiceServer"
 bun run server.ts > /home/pai/voice-server.log 2>&1 &
 
 # --- Start ttyd ---
-# Use the dynamic BIND_PORT if provided, fallback to 8082
 PORT="${BIND_PORT:-8082}"
 echo "Starting PAI Terminal on port $PORT..."
 exec ttyd -p "$PORT" bash
