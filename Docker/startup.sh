@@ -6,6 +6,10 @@ PAI_DIR="/home/pai/.claude"
 CONFIG_DIR="/home/pai/.config/PAI"
 APP_DIR="/usr/local/pai"
 
+# Fix permissions for persistent volumes (mounted as root by Docker)
+sudo chown -R pai:pai "$PAI_DIR" 2>/dev/null || true
+sudo chown -R pai:pai "$CONFIG_DIR" 2>/dev/null || true
+
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$PAI_DIR"
 
@@ -52,10 +56,8 @@ SETTINGS_PATH="$PAI_DIR/settings.json"
 if [ ! -L "$SETTINGS_PATH" ] && [ -f "$SETTINGS_PATH" ]; then
     rm "$SETTINGS_PATH"
 fi
-ln -snf "$APP_DIR/settings.json" "$SETTINGS_PATH"
 
-# Wait, we need to modify settings.json, so it CANNOT be a symlink to a read-only APP_DIR
-# We'll copy it from APP_DIR to CONFIG_DIR and symlink back
+# We'll copy settings.json from APP_DIR to CONFIG_DIR and symlink back
 SETTINGS_STORE="$CONFIG_DIR/settings.json"
 if [ ! -f "$SETTINGS_STORE" ]; then
     cp "$APP_DIR/settings.json" "$SETTINGS_STORE"
@@ -135,5 +137,7 @@ cd "$PAI_DIR/VoiceServer"
 bun run server.ts > /home/pai/voice-server.log 2>&1 &
 
 # --- Start ttyd ---
-echo "Starting PAI Terminal on port 8080..."
-exec ttyd -p 8080 bash
+# Use the dynamic BIND_PORT if provided, fallback to 8082
+PORT="${BIND_PORT:-8082}"
+echo "Starting PAI Terminal on port $PORT..."
+exec ttyd -p "$PORT" bash
