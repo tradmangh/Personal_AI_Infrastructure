@@ -28,8 +28,7 @@ RUN apt-get update && \
     unzip \
     python3 \
     mpg123 && \
-    # Download ttyd binary directly (avoiding repo issues)
-    # Architecture detection for x86_64 or aarch64
+    # Download ttyd binary directly
     ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then TTYD_ARCH="x86_64"; else TTYD_ARCH="aarch64"; fi && \
     curl -L "https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.${TTYD_ARCH}" -o /usr/local/bin/ttyd && \
@@ -38,22 +37,22 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy Bun from builder
-COPY --from=builder /root/.bun /home/pai/.bun
-ENV PATH="/home/pai/.bun/bin:${PATH}"
+# Install Claude Code globally (Running as ROOT to avoid permission issues)
+RUN npm install -g @anthropic-ai/claude-code
 
 # Create user 'pai'
 RUN useradd -m -s /bin/bash pai && \
     echo "pai ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Copy Bun from builder and set ownership
+COPY --from=builder --chown=pai:pai /root/.bun /home/pai/.bun
+ENV PATH="/home/pai/.bun/bin:${PATH}"
 
 # Create app directory
 RUN mkdir -p /usr/local/pai && chown pai:pai /usr/local/pai
 
 USER pai
 WORKDIR /home/pai
-
-# Install Claude Code globally
-RUN npm install -g @anthropic-ai/claude-code
 
 # Copy PAI release files to /usr/local/pai
 COPY --chown=pai:pai Releases/v4.0.3/.claude /usr/local/pai
