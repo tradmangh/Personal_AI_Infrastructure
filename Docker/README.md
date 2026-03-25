@@ -3,7 +3,7 @@
 This setup allows you to deploy Personal AI Infrastructure (PAI) on any server running Docker, including Coolify.
 
 ## Features
-- **Web-based Terminal**: Access PAI via your browser on port 8080 (powered by `ttyd`).
+- **Web-based Terminal**: Access PAI via your browser on port 8082 (powered by `ttyd`).
 - **Voice Server**: Background voice notification server on port 8888.
 - **Persistent Memory**: Your AI's memory and user files are stored in Docker volumes.
 - **Universal Configuration**: One Docker Compose for Public, VPN, or Private modes.
@@ -37,18 +37,19 @@ Access via a custom domain, but Traefik blocks anyone not on your VPN.
 No domain or SSL. Only accessible via the server's internal VPN IP.
 - `BIND_IP`: `10.8.0.1` (Your server's WireGuard IP)
 - `TRAEFIK_ENABLE`: `false`
-- Access via: `http://10.8.0.1:8080`
+- Access via: `http://10.8.0.1:8082`
 
 ### Scenario D: Standard Public (Exposed Ports) - **NOT RECOMMENDED**
 If you want to access via IP and port directly over the public internet. This exposes your PAI instance to the open web without SSL.
 - `BIND_IP`: `0.0.0.0`
 - `TRAEFIK_ENABLE`: `false`
-- Access via: `http://<public-ip>:8080`
+- Access via: `http://<public-ip>:8082`
 
 ## Core Environment Variables
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `BIND_IP` | Interface IP to bind to | `127.0.0.1` |
+| `BIND_PORT` | Port for the terminal | `8082` |
 | `VPN_SUBNET` | IP Allowlist for Traefik | `127.0.0.1/32` |
 | `FQDN` | FQDN for Traefik | `localhost` |
 | `ANTHROPIC_API_KEY` | Your Claude API key | (None) |
