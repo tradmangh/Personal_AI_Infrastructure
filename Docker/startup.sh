@@ -7,38 +7,34 @@ CONFIG_DIR="/home/pai/.config/PAI"
 APP_DIR="/usr/local/pai"
 
 # Fix permissions for persistent volumes
-sudo chown -R pai:pai "$PAI_DIR" 2>/dev/null || true
-sudo chown -R pai:pai "$CONFIG_DIR" 2>/dev/null || true
-
-# --- SSH & User Setup ---
-# Set user password if provided
-if [ -n "$PAI_PASSWORD" ]; then
-    echo "pai:$PAI_PASSWORD" | sudo chpasswd
-    echo "Password updated for user 'pai'."
-else
-    echo "WARNING: PAI_PASSWORD not set. SSH password login will likely fail."
-fi
-
-# Configure SSH for password auth
-sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-
-# Start SSH service
-echo "Starting SSH server..."
-sudo /usr/sbin/sshd
+sudo chown -R pai:pai "/home/pai/.claude" 2>/dev/null || true
+sudo chown -R pai:pai "/home/pai/.config" 2>/dev/null || true
 
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$PAI_DIR"
 
-# Symlink app files from APP_DIR to PAI_DIR
-for item in "$APP_DIR"/*; do
-    base=$(basename "$item")
-    if [ "$base" != "MEMORY" ] && [ "$base" != "USER" ]; then
-        ln -snf "$item" "$PAI_DIR/$base"
+# --- SSH & User Setup ---
+if [ -n "$PAI_PASSWORD" ]; then
+    echo "pai:$PAI_PASSWORD" | sudo chpasswd
+fi
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sudo /usr/sbin/sshd
+
+# --- Code Sync Strategy ---
+# We symlink CODE from APP_DIR (read-only) to PAI_DIR (persistent volume).
+# This ensures that when the image updates, the volume gets the new code,
+# but your auth.json, sessions.json, and MEMORY stay untouched.
+
+CODE_ITEMS=("PAI" "agents" "hooks" "lib" "skills" "VoiceServer" "CLAUDE.md" "CLAUDE.md.template" "statusline-command.sh")
+
+for item in "${CODE_ITEMS[@]}"; do
+    if [ -e "$APP_DIR/$item" ]; then
+        ln -snf "$APP_DIR/$item" "$PAI_DIR/$item"
     fi
 done
 
-# Ensure persistent directories exist
+# Ensure persistent directories exist if this is a first-time boot
 mkdir -p "$PAI_DIR/MEMORY/STATE"
 mkdir -p "$PAI_DIR/MEMORY/LEARNING"
 mkdir -p "$PAI_DIR/MEMORY/WORK"
@@ -65,16 +61,15 @@ ln -sf "$ENV_PATH" "/home/pai/.env"
 
 # --- Patch settings.json ---
 SETTINGS_PATH="$PAI_DIR/settings.json"
-if [ ! -L "$SETTINGS_PATH" ] && [ -f "$SETTINGS_PATH" ]; then
-    rm "$SETTINGS_PATH"
-fi
-
 SETTINGS_STORE="$CONFIG_DIR/settings.json"
+
+# First time setup: Copy settings.json to persistent config if it doesn't exist
 if [ ! -f "$SETTINGS_STORE" ]; then
     cp "$APP_DIR/settings.json" "$SETTINGS_STORE"
 fi
 ln -snf "$SETTINGS_STORE" "$SETTINGS_PATH"
 
+# Update JSON via Python
 python3 << EOF
 import json
 import os
@@ -120,16 +115,6 @@ data['preferences']['temperatureUnit'] = "$TEMPERATURE_UNIT"
 with open(path, 'w') as f:
     json.dump(data, f, indent=2)
 EOF
-
-# --- Patch VoiceServer for Linux ---
-if [ ! -d "$PAI_DIR/VoiceServer" ] || [ -L "$PAI_DIR/VoiceServer" ]; then
-    rm -rf "$PAI_DIR/VoiceServer"
-    cp -r "$APP_DIR/VoiceServer" "$PAI_DIR/VoiceServer"
-fi
-
-VOICE_SERVER_TS="$PAI_DIR/VoiceServer/server.ts"
-sed -i 's/\/usr\/bin\/afplay/mpg123/g' "$VOICE_SERVER_TS"
-sed -i 's/-v/--gain/g' "$VOICE_SERVER_TS"
 
 # --- Shell Aliases ---
 if ! grep -q "alias pai=" /home/pai/.bashrc; then
