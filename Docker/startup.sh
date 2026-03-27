@@ -22,10 +22,6 @@ sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/s
 sudo /usr/sbin/sshd
 
 # --- Code Sync Strategy ---
-# We symlink CODE from APP_DIR (read-only) to PAI_DIR (persistent volume).
-# This ensures that when the image updates, the volume gets the new code,
-# but your auth.json, sessions.json, and MEMORY stay untouched.
-
 CODE_ITEMS=("PAI" "agents" "hooks" "lib" "skills" "VoiceServer" "CLAUDE.md" "CLAUDE.md.template" "statusline-command.sh")
 
 for item in "${CODE_ITEMS[@]}"; do
@@ -34,7 +30,7 @@ for item in "${CODE_ITEMS[@]}"; do
     fi
 done
 
-# Ensure persistent directories exist if this is a first-time boot
+# Ensure persistent directories exist
 mkdir -p "$PAI_DIR/MEMORY/STATE"
 mkdir -p "$PAI_DIR/MEMORY/LEARNING"
 mkdir -p "$PAI_DIR/MEMORY/WORK"
@@ -63,7 +59,6 @@ ln -sf "$ENV_PATH" "/home/pai/.env"
 SETTINGS_PATH="$PAI_DIR/settings.json"
 SETTINGS_STORE="$CONFIG_DIR/settings.json"
 
-# First time setup: Copy settings.json to persistent config if it doesn't exist
 if [ ! -f "$SETTINGS_STORE" ]; then
     cp "$APP_DIR/settings.json" "$SETTINGS_STORE"
 fi
@@ -130,4 +125,5 @@ bun run server.ts > /home/pai/voice-server.log 2>&1 &
 # --- Start ttyd ---
 PORT="${BIND_PORT:-8082}"
 echo "Starting PAI Terminal on port $PORT..."
-exec ttyd -p "$PORT" bash
+# Added -W flag for writable terminal
+exec ttyd -W -p "$PORT" bash

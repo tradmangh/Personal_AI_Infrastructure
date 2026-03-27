@@ -4,8 +4,6 @@ services:
       context: ..
       dockerfile: Docker/Dockerfile
     container_name: pai
-    # BIND_IP: Default is 127.0.0.1 (Loopback) for security. 
-    # Set to 0.0.0.0 to expose publicly, or 10.8.0.1 for a specific VPN interface.
     ports:
       - "${BIND_IP:-127.0.0.1}:${BIND_PORT:-8082}:8082"
       - "${BIND_IP:-127.0.0.1}:${VOICE_PORT:-8888}:8888"
@@ -27,8 +25,8 @@ services:
       - BIND_PORT
       - VOICE_PORT
       - SSH_PORT
+      - FQDN
     volumes:
-      # We persist the entire configuration directories
       - pai-claude:/home/pai/.claude
       - pai-config:/home/pai/.config
     restart: unless-stopped
@@ -38,7 +36,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pai.rule=Host(`${FQDN:-localhost}`)"
+      - "traefik.http.services.pai.loadbalancer.server.port=8082"
 
 volumes:
   pai-claude:
