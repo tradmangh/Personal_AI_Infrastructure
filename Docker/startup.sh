@@ -13,6 +13,18 @@ sudo chown -R pai:pai "/home/pai/.config" 2>/dev/null || true
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$PAI_DIR"
 
+# --- Claude Auth Persistence ---
+# Claude Code stores its main auth/config at ~/.claude.json (outside the .claude dir)
+# We symlink it into the persistent volume so it survives redeploys.
+if [ ! -L "/home/pai/.claude.json" ]; then
+    # If a real file already exists (unlikely in a new container), move it to volume
+    if [ -f "/home/pai/.claude.json" ]; then
+        mv "/home/pai/.claude.json" "$PAI_DIR/.claude.json"
+    fi
+    # Create the symlink. If the target doesn't exist, Claude will create it there.
+    ln -snf "$PAI_DIR/.claude.json" "/home/pai/.claude.json"
+fi
+
 # --- SSH & User Setup ---
 if [ -n "$PAI_PASSWORD" ]; then
     echo "pai:$PAI_PASSWORD" | sudo chpasswd
@@ -125,5 +137,4 @@ bun run server.ts > /home/pai/voice-server.log 2>&1 &
 # --- Start ttyd ---
 PORT="${BIND_PORT:-8082}"
 echo "Starting PAI Terminal on port $PORT..."
-# Added -W flag for writable terminal
 exec ttyd -W -p "$PORT" bash
