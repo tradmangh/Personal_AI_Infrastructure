@@ -9,19 +9,18 @@ APP_DIR="/usr/local/pai"
 # Fix permissions for persistent volumes
 sudo chown -R pai:pai "/home/pai/.claude" 2>/dev/null || true
 sudo chown -R pai:pai "/home/pai/.config" 2>/dev/null || true
+sudo chown -R pai:pai "/home/pai/.local" 2>/dev/null || true
 
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$PAI_DIR"
+mkdir -p "/home/pai/.local/share"
 
 # --- Claude Auth Persistence ---
 # Claude Code stores its main auth/config at ~/.claude.json (outside the .claude dir)
-# We symlink it into the persistent volume so it survives redeploys.
 if [ ! -L "/home/pai/.claude.json" ]; then
-    # If a real file already exists (unlikely in a new container), move it to volume
     if [ -f "/home/pai/.claude.json" ]; then
         mv "/home/pai/.claude.json" "$PAI_DIR/.claude.json"
     fi
-    # Create the symlink. If the target doesn't exist, Claude will create it there.
     ln -snf "$PAI_DIR/.claude.json" "/home/pai/.claude.json"
 fi
 

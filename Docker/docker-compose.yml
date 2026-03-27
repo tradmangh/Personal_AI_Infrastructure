@@ -27,8 +27,10 @@ services:
       - SSH_PORT
       - FQDN
     volumes:
+      # Comprehensive persistence for all PAI and Claude state
       - pai-claude:/home/pai/.claude
       - pai-config:/home/pai/.config
+      - pai-local:/home/pai/.local
     restart: unless-stopped
     # Coolify Healthcheck
     healthcheck:
@@ -45,3 +47,4 @@ services:
 volumes:
   pai-claude:
   pai-config:
+  pai-local:
